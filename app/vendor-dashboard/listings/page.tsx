@@ -284,37 +284,37 @@ export default function VendorListingsPage() {
 
     <Card className="mb-4">
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-4">
-            <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-              <span className="text-gray-500 text-sm">Image</span>
+        <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+          <div className="flex items-start space-x-3 md:space-x-4 w-full md:w-auto">
+            <div className="w-16 h-16 md:w-20 md:h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-gray-500 text-xs md:text-sm">Image</span>
            
             </div>
-            <div className="flex-1">
-              <CardTitle className="text-lg">{listing.title}</CardTitle>
-              <CardDescription className="mb-2">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-base md:text-lg truncate">{listing.title}</CardTitle>
+              <CardDescription className="mb-2 line-clamp-2">
                 {listing.description}
               </CardDescription>
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600">
                 <div className="flex items-center">
-                  <MapPin className="mr-1 h-3 w-3" />
-                  {listing.location}
+                  <MapPin className="mr-1 h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{listing.location}</span>
                 </div>
                 <div className="flex items-center">
-                  <Star className="mr-1 h-3 w-3" />
+                  <Star className="mr-1 h-3 w-3 flex-shrink-0" />
                   {listing.rating > 0
                     ? `${listing.rating} (${listing.reviews})`
                     : "No reviews"}
                 </div>
                 <div className="flex items-center">
-                  <Calendar className="mr-1 h-3 w-3" />
+                  <Calendar className="mr-1 h-3 w-3 flex-shrink-0" />
                   {listing.bookings} bookings
                 </div>
               </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-lg font-semibold">
+          <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start w-full md:w-auto gap-2">
+            <div className="text-base md:text-lg font-semibold">
               ₹{listing.price.toLocaleString()}
             </div>
             {getStatusBadge(listing.status)}
@@ -322,23 +322,26 @@ export default function VendorListingsPage() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-500">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <div className="text-xs md:text-sm text-gray-500">
             Created: {formatDate(listing.createdAt)}
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
                          <Button 
                variant="outline" 
                size="sm"
+               className="flex-1 md:flex-none"
                onClick={() => router.push(`/services/${listing._id}`)}
              >
                <Eye className="mr-1 h-3 w-3" />
-               View Service
+               <span className="hidden sm:inline">View Service</span>
+               <span className="sm:hidden">View</span>
              </Button>
            
             <Button
               variant="outline"
               size="sm"
+              className="flex-1 md:flex-none"
               onClick={() =>
                 router.push(`/vendor-dashboard/listings/${listing._id}/edit`)
               }
@@ -351,7 +354,7 @@ export default function VendorListingsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-600 hover:text-red-700"
+                  className="flex-1 md:flex-none text-red-600 hover:text-red-700"
                 >
                   <Trash2 className="mr-1 h-3 w-3" />
                   Delete
@@ -385,7 +388,7 @@ export default function VendorListingsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-yellow-600 hover:text-yellow-700"
+                    className="flex-1 md:flex-none text-yellow-600 hover:text-yellow-700"
                   >
                     <PowerOff className="mr-1 h-3 w-3" />
                     Deactivate
@@ -420,7 +423,7 @@ export default function VendorListingsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 pb-24 lg:pb-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div>
@@ -441,65 +444,49 @@ export default function VendorListingsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-8">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-xs md:text-sm font-medium text-gray-600">
                   Total Listings
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xl md:text-2xl font-bold text-gray-900">
                   {listings.active.length +
-                    listings.draft.length +
                     listings.inactive.length}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-pink-600" />
+              <DollarSign className="h-6 w-6 md:h-8 md:w-8 text-pink-600" />
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs md:text-sm font-medium text-gray-600">Active</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900">
                   {listings.active.length}
                 </p>
               </div>
-              <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                <div className="h-4 w-4 bg-green-600 rounded-full"></div>
+              <div className="h-6 w-6 md:h-8 md:w-8 bg-green-100 rounded-full flex items-center justify-center">
+                <div className="h-3 w-3 md:h-4 md:w-4 bg-green-600 rounded-full"></div>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-6">
+        <Card className="col-span-2 md:col-span-1">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Draft</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {listings.draft.length}
-                </p>
-              </div>
-              <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                <div className="h-4 w-4 bg-yellow-600 rounded-full"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Inactive</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs md:text-sm font-medium text-gray-600">Inactive</p>
+                <p className="text-xl md:text-2xl font-bold text-gray-900">
                   {listings.inactive.length}
                 </p>
               </div>
-              <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <div className="h-4 w-4 bg-gray-600 rounded-full"></div>
+              <div className="h-6 w-6 md:h-8 md:w-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <div className="h-3 w-3 md:h-4 md:w-4 bg-gray-600 rounded-full"></div>
               </div>
             </div>
           </CardContent>
@@ -508,10 +495,10 @@ export default function VendorListingsPage() {
 
       {/* Listings Tabs */}
       <div className="space-y-6">
-        <div className="flex space-x-4 border-b">
+        <div className="flex space-x-2 md:space-x-4 border-b overflow-x-auto">
           <button
             onClick={() => setActiveTab("active")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+            className={`pb-2 px-3 md:px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
               activeTab === "active"
                 ? "border-pink-500 text-pink-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
@@ -520,18 +507,8 @@ export default function VendorListingsPage() {
             Active ({listings.active.length})
           </button>
           <button
-            onClick={() => setActiveTab("draft")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "draft"
-                ? "border-pink-500 text-pink-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Draft ({listings.draft.length})
-          </button>
-          <button
             onClick={() => setActiveTab("inactive")}
-            className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+            className={`pb-2 px-3 md:px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
               activeTab === "inactive"
                 ? "border-pink-500 text-pink-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
@@ -569,28 +546,6 @@ export default function VendorListingsPage() {
                 </Card>
               ) : (
                 listings.active.map((listing) => (
-                  <ListingCard key={listing._id} listing={listing} />
-                ))
-              )}
-            </>
-          )}
-
-          {activeTab === "draft" && (
-            <>
-              {listings.draft.length === 0 ? (
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <Edit className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      No draft listings
-                    </h3>
-                    <p className="text-gray-500">
-                      You don't have any draft listings.
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                listings.draft.map((listing) => (
                   <ListingCard key={listing._id} listing={listing} />
                 ))
               )}

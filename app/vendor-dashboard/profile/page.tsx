@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth, useUser, useClerk } from "@clerk/nextjs"
-import { Camera, Mail, Phone, MapPin, Calendar, Edit2, Save, Building, Globe, Star, CheckCircle, Plus, RefreshCw, Trash2, Shield, Key, User, Settings, LogOut, AlertTriangle } from "lucide-react"
+import { Camera, Mail, Phone, MapPin, Calendar, Edit2, Save, Building, Star, CheckCircle, Plus, RefreshCw, Trash2, Shield, LogOut, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -626,42 +626,6 @@ export default function VendorProfilePage() {
             <CardDescription>Manage your vendor account settings and security</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <User className="h-6 w-6 text-gray-500" />
-                <div>
-                  <h4 className="font-medium">Update Account Details</h4>
-                  <p className="text-sm text-gray-500">
-                    Change your profile information and password.
-                  </p>
-                </div>
-              </div>
-              <Button onClick={() => router.push('/user-profile')} variant="outline">
-                <Settings className="mr-2 h-4 w-4" />
-                Manage
-              </Button>
-            </div>
-
-            <Separator />
-
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <Key className="h-6 w-6 text-gray-500" />
-                <div>
-                  <h4 className="font-medium">API Keys & Integrations</h4>
-                  <p className="text-sm text-gray-500">
-                    Connect with external services and manage your API keys.
-                  </p>
-                </div>
-              </div>
-              <Button variant="outline" disabled>
-                <Globe className="mr-2 h-4 w-4" />
-                Manage
-              </Button>
-            </div>
-
-            <Separator />
-
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <LogOut className="h-6 w-6 text-gray-500" />

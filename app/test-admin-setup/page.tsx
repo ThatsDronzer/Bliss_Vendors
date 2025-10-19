@@ -1,7 +1,7 @@
-﻿"use client"
+"use client"
 
 import { UnderMaintenance } from "@/components/under-maintenance"
 
-export default function CheckoutPage() {
+export default function TestAdminSetupPage() {
   return <UnderMaintenance />
 }

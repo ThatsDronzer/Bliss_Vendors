@@ -1,9 +1,15 @@
+"use client"
+
 import Link from "next/link"
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useUser } from "@clerk/nextjs"
 
 export function Footer() {
+  const { user } = useUser()
+  const userRole = user?.unsafeMetadata?.role as string || "user"
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-16">
@@ -94,11 +100,13 @@ export function Footer() {
                   Contact Us
                 </Link>
               </li>
-              <li>
-                <Link href="/become-vendor" className="text-gray-300 hover:text-pink-400 transition-colors">
-                  Become a Vendor
-                </Link>
-              </li>
+              {userRole === "user" && (
+                <li>
+                  <Link href="/become-vendor" className="text-gray-300 hover:text-pink-400 transition-colors">
+                    Become a Vendor
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link href="/careers" className="text-gray-300 hover:text-pink-400 transition-colors">
                   Careers

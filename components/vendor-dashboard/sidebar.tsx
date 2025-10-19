@@ -46,7 +46,6 @@ const navItems = [
     title: "Messages",
     href: "/vendor-dashboard/messages",
     icon: <MessageSquare className="w-5 h-5" />,
-    badge: 2,
   },
   {
     title: "Reviews",

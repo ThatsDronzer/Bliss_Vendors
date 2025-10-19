@@ -62,43 +62,25 @@ export default function VendorDashboardPage() {
 
   // Mock analytics data
   const analytics = {
-    totalBookings: 24,
-    bookingGrowth: 12,
-    averageRating: 4.8,
-    ratingGrowth: 5,
-    unreadMessages: 3,
-    messageGrowth: -2,
-    monthlyRevenue: 485000,
-    revenueGrowth: 18,
-    bookingCompletionRate: 95,
-    avgResponseTime: 2,
-    customerSatisfaction: 92,
-    recentBookings: [
-      {
-        id: "1",
-      clientName: "Priya Sharma",
-        service: "Wedding Photography",
-        date: "2024-01-20",
-        amount: 25000,
-        status: "confirmed"
-      },
-      {
-        id: "2",
-        clientName: "Rahul Verma",
-        service: "Venue Booking",
-        date: "2024-01-25",
-        amount: 150000,
-        status: "pending"
-      },
-      {
-        id: "3",
-        clientName: "Anjali Patel",
-        service: "Catering Services",
-        date: "2024-01-30",
-        amount: 75000,
-        status: "confirmed"
-      }
-    ]
+    totalBookings: 0,
+    bookingGrowth: 0,
+    averageRating: 0,
+    ratingGrowth: 0,
+    unreadMessages: 0,
+    messageGrowth: 0,
+    monthlyRevenue: 0,
+    revenueGrowth: 0,
+    bookingCompletionRate: 0,
+    avgResponseTime: 0,
+    customerSatisfaction: 0,
+    recentBookings: [] as Array<{
+      id: string;
+      clientName: string;
+      service: string;
+      date: string;
+      amount: number;
+      status: string;
+    }>
   }
 
   return (
@@ -110,7 +92,7 @@ export default function VendorDashboardPage() {
         </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div className="grid grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <StatsCard
           title="Total Bookings"
           value={analytics.totalBookings}
@@ -152,30 +134,40 @@ export default function VendorDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 sm:space-y-4">
-                {analytics.recentBookings.map((booking) => (
-                  <div key={booking.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 border rounded-lg">
-                    <div className="flex items-center space-x-3 sm:space-x-4">
-                      <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Users className="h-5 w-5 text-pink-600" />
-                    </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm sm:text-base text-gray-900 truncate">{booking.clientName}</p>
-                        <p className="text-xs sm:text-sm text-gray-500 truncate">{booking.service}</p>
-                        <p className="text-xs text-gray-400">{booking.date}</p>
+                {analytics.recentBookings.length > 0 ? (
+                  analytics.recentBookings.map((booking) => (
+                    <div key={booking.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3 sm:space-x-4">
+                        <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Users className="h-5 w-5 text-pink-600" />
+                      </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm sm:text-base text-gray-900 truncate">{booking.clientName}</p>
+                          <p className="text-xs sm:text-sm text-gray-500 truncate">{booking.service}</p>
+                          <p className="text-xs text-gray-400">{booking.date}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between sm:flex-col sm:text-right gap-2 pl-13 sm:pl-0">
+                        <p className="font-medium text-sm sm:text-base text-gray-900">₹{booking.amount.toLocaleString()}</p>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {booking.status}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between sm:flex-col sm:text-right gap-2 pl-13 sm:pl-0">
-                      <p className="font-medium text-sm sm:text-base text-gray-900">₹{booking.amount.toLocaleString()}</p>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {booking.status}
-                      </span>
+                  ))
+                ) : (
+                  <div className="text-center py-8 sm:py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BookMarked className="h-8 w-8 text-gray-400" />
                     </div>
+                    <p className="text-gray-500 text-sm sm:text-base">No bookings yet</p>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-1">Your booking requests will appear here</p>
                   </div>
-                ))}
+                )}
               </div>
               <Button variant="outline" className="w-full mt-3 sm:mt-4">
                 View All Bookings
@@ -184,69 +176,8 @@ export default function VendorDashboardPage() {
           </Card>
         </div>
 
-        {/* Quick Actions & Profile */}
+        {/* Performance Metrics */}
         <div className="space-y-4 sm:space-y-6">
-          {/* Profile Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg sm:text-xl">Profile Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
-                <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl font-bold text-pink-600">
-                    {vendorData.name.charAt(0)}
-                  </span>
-                </div>
-                <div className="text-center sm:text-left">
-                  <h3 className="font-medium text-sm sm:text-base text-gray-900">{vendorData.name}</h3>
-                  <p className="text-xs sm:text-sm text-gray-500">{vendorData.category}</p>
-                  <p className="text-xs text-gray-400">{vendorData.location}</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Status:</span>
-                  <span className="font-medium text-green-600">{vendorData.status}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Joined:</span>
-                  <span className="font-medium">{vendorData.joinDate}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Rating:</span>
-                  <span className="font-medium">⭐ {analytics.averageRating}</span>
-                </div>
-            </div>
-          </CardContent>
-        </Card>
-
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg sm:text-xl">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 sm:space-y-3">
-              <Button className="w-full justify-start text-sm sm:text-base h-10 sm:h-auto" variant="outline">
-                <BookMarked className="mr-2 h-4 w-4" />
-                View Bookings
-              </Button>
-              <Button className="w-full justify-start text-sm sm:text-base h-10 sm:h-auto" variant="outline">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Check Messages
-              </Button>
-              <Button className="w-full justify-start text-sm sm:text-base h-10 sm:h-auto" variant="outline">
-                <Star className="mr-2 h-4 w-4" />
-                View Reviews
-              </Button>
-              <Button className="w-full justify-start text-sm sm:text-base h-10 sm:h-auto" variant="outline">
-                <BarChart className="mr-2 h-4 w-4" />
-                Analytics
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Performance Metrics */}
         <Card>
           <CardHeader>
               <CardTitle className="text-lg sm:text-xl">Performance</CardTitle>

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { Compass, Home, Info, LayoutDashboard, LogOut, LogIn } from "lucide-react"
+import { Compass, Home, LayoutDashboard, LogOut, LogIn, Store } from "lucide-react"
 import { useClerk, useUser, useAuth } from "@clerk/nextjs"
 import { toast } from "sonner"
 import {
@@ -74,12 +74,13 @@ export function MobileBottomNav() {
       href: "/home-service",
       isActive: pathname === "/home-service"
     },
-    {
-      name: "About",
-      icon: Info,
-      href: "/about",
-      isActive: pathname === "/about"
-    }
+    // Only show "Become Vendor" if user role is "user" (not vendor or admin)
+    ...(userRole === "user" ? [{
+      name: "Become Vendor",
+      icon: Store,
+      href: "/become-vendor",
+      isActive: pathname === "/become-vendor"
+    }] : [])
   ]
 
   // Add Dashboard only if user is signed in
@@ -95,10 +96,19 @@ export function MobileBottomNav() {
       ]
     : baseNavItems
 
+  // Calculate total columns: navItems + 1 (for Login/Logout button)
+  const totalColumns = navItems.length + 1
+  
+  // Use conditional logic with complete class names for Tailwind to detect
+  const gridColsClass = totalColumns === 3 ? 'grid-cols-3' : 
+                        totalColumns === 4 ? 'grid-cols-4' : 
+                        totalColumns === 5 ? 'grid-cols-5' : 
+                        totalColumns === 6 ? 'grid-cols-6' : 'grid-cols-4'
+
   return (
     <>
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-lg">
-        <div className={`grid ${isSignedIn && isLoaded ? 'grid-cols-5' : 'grid-cols-4'} gap-1 px-2 py-2 max-w-screen-sm mx-auto`}>
+        <div className={`grid ${gridColsClass} gap-1 px-2 py-2 max-w-screen-sm mx-auto`}>
           {navItems.map((item) => {
             const Icon = item.icon
             return (

@@ -20,7 +20,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { toast } from "@/components/ui/use-toast"
-import { mockVendorReviews } from "@/lib/auth"
 
 export default function VendorReviewsPage() {
   const router = useRouter()
@@ -63,8 +62,17 @@ export default function VendorReviewsPage() {
     return null
   }
 
-  // Use the mock vendor reviews for demonstration
-  const vendorReviews = mockVendorReviews
+  // Initialize empty reviews for new vendors
+  const vendorReviews: Array<{
+    id: string;
+    clientName: string;
+    clientImage: string;
+    rating: number;
+    date: string;
+    review: string;
+    hasResponse: boolean;
+    response?: string;
+  }> = []
   
   // Filter reviews based on search, rating, and response status
   const filteredReviews = vendorReviews.filter((review) => {
@@ -219,8 +227,13 @@ export default function VendorReviewsPage() {
           ))
         ) : (
           <div className="text-center py-12">
-            <p className="text-lg font-medium">No reviews found</p>
-            <p className="text-gray-500 mt-1">Try adjusting your search or filter criteria</p>
+            <Star className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-lg font-medium">No reviews yet</p>
+            <p className="text-gray-500 mt-1">
+              {vendorReviews.length === 0 
+                ? "Reviews from your clients will appear here" 
+                : "Try adjusting your search or filter criteria"}
+            </p>
           </div>
         )}
       </div>

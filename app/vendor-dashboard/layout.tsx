@@ -29,7 +29,7 @@ export default function VendorDashboardLayout({
   }
 
   return (
-    <div className="flex">
+    <div className="flex pb-20 lg:pb-0">
       <VendorDashboardSidebar />
       <main className="flex-1 min-h-[calc(100vh-73px)] w-full md:w-auto">{children}</main>
     </div>

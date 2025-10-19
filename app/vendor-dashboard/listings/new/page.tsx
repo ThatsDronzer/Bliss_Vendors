@@ -14,15 +14,6 @@ import { toast } from "sonner"
 import { useSession } from '@clerk/clerk-react';
 import { Badge } from "@/components/ui/badge"
 
-interface Item {
-  id: string;
-  name: string;
-  price: string;
-  description: string;
-  image: File | null;
-  imagePreview: string;
-}
-
 interface CloudinaryUploadResponse {
   public_id: string;
   secure_url: string;
@@ -45,19 +36,13 @@ export default function NewListingPage() {
     price: "",
     location: "",
     capacity: "",
-    features: [] as string[], // Added features array
-    items: [] as Item[],
+    features: [] as string[],
   })
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [newFeature, setNewFeature] = useState("") // Added for features input
-  const [newItem, setNewItem] = useState({
-    name: "",
-    price: "",
-    description: "",
-    image: null as File | null,
-    imagePreview: "",
-  })
+  const [newFeature, setNewFeature] = useState("")
+  const [vendorData, setVendorData] = useState<any>(null)
+  const [isLoadingVendor, setIsLoadingVendor] = useState(true)
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -84,6 +69,37 @@ export default function NewListingPage() {
     }
   }, [session, isSignedIn]);
 
+  // Fetch vendor data to pre-populate fields
+  useEffect(() => {
+    const fetchVendorData = async () => {
+      if (user?.id) {
+        setIsLoadingVendor(true)
+        try {
+          const response = await fetch(`/api/vendor/${user.id}`)
+          if (response.ok) {
+            const data = await response.json()
+            setVendorData(data)
+            
+            // Pre-populate form fields from vendor data
+            setFormData(prev => ({
+              ...prev,
+              category: data.service_type || "",
+              location: data.service_address?.City || "",
+            }))
+          }
+        } catch (error) {
+          console.error("Error fetching vendor data:", error)
+        } finally {
+          setIsLoadingVendor(false)
+        }
+      }
+    }
+    
+    if (isSignedIn && user?.id) {
+      fetchVendorData()
+    }
+  }, [user?.id, isSignedIn])
+
   // Redirect if not authenticated or not a vendor
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -97,18 +113,10 @@ export default function NewListingPage() {
   useEffect(() => {
     return () => {
       imagePreviews.forEach(preview => URL.revokeObjectURL(preview));
-      formData.items.forEach(item => {
-        if (item.imagePreview) {
-          URL.revokeObjectURL(item.imagePreview);
-        }
-      });
-      if (newItem.imagePreview) {
-        URL.revokeObjectURL(newItem.imagePreview);
-      }
     };
-  }, [imagePreviews, formData.items, newItem.imagePreview]);
+  }, [imagePreviews]);
 
-  if (!isLoaded || !isSignedIn || userRole !== "vendor" || tokenLoading) {
+  if (!isLoaded || !isSignedIn || userRole !== "vendor" || tokenLoading || isLoadingVendor) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -135,6 +143,13 @@ export default function NewListingPage() {
   ]
 
   const handleInputChange = (field: string, value: string | string[]) => {
+    // Handle price field - only allow digits
+    if (field === "price" && typeof value === "string") {
+      const digitsOnly = value.replace(/\D/g, "")
+      setFormData((prev) => ({ ...prev, [field]: digitsOnly }))
+      return
+    }
+    
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -158,34 +173,6 @@ export default function NewListingPage() {
     URL.revokeObjectURL(imagePreviews[index]);
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleItemImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`File too large: ${file.name} (max 10MB)`);
-        return;
-      }
-
-      const preview = URL.createObjectURL(file);
-      setNewItem(prev => ({
-        ...prev,
-        image: file,
-        imagePreview: preview
-      }));
-    }
-  };
-
-  const handleRemoveItemImage = () => {
-    if (newItem.imagePreview) {
-      URL.revokeObjectURL(newItem.imagePreview);
-    }
-    setNewItem(prev => ({
-      ...prev,
-      image: null,
-      imagePreview: ""
-    }));
   };
 
   // Features functions
@@ -241,40 +228,6 @@ export default function NewListingPage() {
     return Promise.all(uploadPromises);
   };
 
-  const uploadItemImagesToCloudinary = async (items: Item[]): Promise<{ url: string, public_id: string }[]> => {
-    const uploadPromises = items.map(async (item) => {
-      if (!item.image) {
-        throw new Error(`No image found for item: ${item.name}`);
-      }
-
-      const formData = new FormData();
-      formData.append('file', item.image);
-      formData.append('upload_preset', 'nextjs_unsigned_upload');
-      formData.append('folder', 'listings/items');
-      formData.append('tags', 'item');
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Image upload failed for item: ${item.name}`);
-      }
-
-      const data = await response.json();
-      return {
-        url: data.secure_url,
-        public_id: data.public_id
-      };
-    });
-
-    return Promise.all(uploadPromises);
-  };
-
   const deleteUploadedImages = async (images: any[]) => {
   for (const image of images) {
     try {
@@ -291,57 +244,19 @@ export default function NewListingPage() {
   }
 };
 
-  const handleAddItem = () => {
-    if (newItem.name.trim() && newItem.price.trim() && newItem.image) {
-      const item: Item = {
-        id: Date.now().toString(),
-        name: newItem.name.trim(),
-        price: newItem.price.trim(),
-        description: newItem.description.trim(),
-        image: newItem.image,
-        imagePreview: newItem.imagePreview
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        items: [...prev.items, item]
-      }))
-
-      setNewItem({
-        name: "",
-        price: "",
-        description: "",
-        image: null,
-        imagePreview: ""
-      })
-    } else {
-      toast.error("Item name, price, and image are required")
-    }
-  }
-
-  const handleRemoveItem = (itemId: string) => {
-    const itemToRemove = formData.items.find(item => item.id === itemId);
-    if (itemToRemove?.imagePreview) {
-      URL.revokeObjectURL(itemToRemove.imagePreview);
-    }
-
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.filter(item => item.id !== itemId)
-    }))
-  }
-
-  const handleItemInputChange = (field: string, value: string) => {
-    setNewItem(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
-
   const validateForm = () => {
     if (!formData.title || !formData.description || !formData.category || !formData.price) {
       return "Please fill in all required fields (Title, Description, Category, Price)"
     }
+    
+    // Validate description word count (minimum 20 words)
+    const trimmedDescription = formData.description.trim()
+    const wordCount = trimmedDescription ? trimmedDescription.split(/\s+/).filter(Boolean).length : 0
+    
+    if (wordCount < 20) {
+      return `Description must be at least 20 words (current: ${wordCount} words)`
+    }
+    
     if (selectedFiles.length === 0) {
       return "Please upload at least one image"
     }
@@ -363,20 +278,8 @@ export default function NewListingPage() {
     // Upload main listing images
     const uploadedImages = await uploadImagesToCloudinary(selectedFiles);
 
-    // Upload item images
-    const uploadedItemImages = await uploadItemImagesToCloudinary(formData.items);
-    
-    // Prepare items data with uploaded image URLs
-    const itemsWithImages = formData.items.map((item, index) => ({
-      name: item.name,
-      description: item.description,
-      price: parseFloat(item.price.replace(/[^0-9.-]+/g, "")) || 0,
-      image: uploadedItemImages[index]
-    }));
-
     // Extract public_ids for cleanup
     const mainImageIds = uploadedImages.map(img => img.public_id);
-    const itemImageIds = uploadedItemImages.map(img => img.public_id);
 
     // Send to your API
     const response = await fetch('/api/listing', {
@@ -392,16 +295,14 @@ export default function NewListingPage() {
         location: formData.location,
         category: formData.category,
         features: formData.features,
-        items: itemsWithImages, // Include items
         images: uploadedImages,
         tempImageIds: mainImageIds, // For cleanup
-        tempItemImageIds: itemImageIds, // For cleanup
       }),
     });
 
     if (!response.ok) {
       // Clean up all uploaded images on error
-      await deleteUploadedImages([...uploadedImages, ...uploadedItemImages]);
+      await deleteUploadedImages(uploadedImages);
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to create listing');
     }
@@ -418,14 +319,6 @@ export default function NewListingPage() {
 };
   const handleCancel = () => {
     imagePreviews.forEach(preview => URL.revokeObjectURL(preview));
-    formData.items.forEach(item => {
-      if (item.imagePreview) {
-        URL.revokeObjectURL(item.imagePreview);
-      }
-    });
-    if (newItem.imagePreview) {
-      URL.revokeObjectURL(newItem.imagePreview);
-    }
     router.push("/vendor-dashboard/listings");
   };
 
@@ -471,7 +364,10 @@ export default function NewListingPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="category">Category *</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                  <Select 
+                    value={formData.category} 
+                    onValueChange={(value) => handleInputChange("category", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -483,17 +379,21 @@ export default function NewListingPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-gray-500">Pre-filled from your vendor profile, you can modify if needed</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price *</Label>
+                  <Label htmlFor="price">Price (₹) *</Label>
                   <Input
                     id="price"
                     value={formData.price}
                     onChange={(e) => handleInputChange("price", e.target.value)}
-                    placeholder="e.g., ₹50,000 or Starting from ₹25,000"
+                    placeholder="e.g., 50000"
                     required
                   />
+                  {formData.price && (
+                    <p className="text-xs text-gray-500">Display: ₹{parseInt(formData.price).toLocaleString('en-IN')}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -504,11 +404,12 @@ export default function NewListingPage() {
                     onChange={(e) => handleInputChange("location", e.target.value)}
                     placeholder="Enter location"
                   />
+                  <p className="text-xs text-gray-500">Pre-filled from your vendor profile, you can modify if needed</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="description">Description * (Minimum 20 words)</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -517,6 +418,13 @@ export default function NewListingPage() {
                   rows={4}
                   required
                 />
+                <p className={`text-xs ${
+                  formData.description.trim().split(/\s+/).filter(Boolean).length < 20 
+                    ? 'text-red-500' 
+                    : 'text-gray-500'
+                }`}>
+                  Word count: {formData.description.trim().split(/\s+/).filter(Boolean).length}/20 minimum
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -601,132 +509,6 @@ export default function NewListingPage() {
                       </Badge>
                     ))}
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Items */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Items & Services</CardTitle>
-              <CardDescription>Add individual items or services with their prices and images</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Add New Item Form */}
-              <div className="border rounded-lg p-4 bg-gray-50">
-                <h4 className="font-medium mb-4">Add New Item</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="item-name">Item Name *</Label>
-                    <Input
-                      id="item-name"
-                      value={newItem.name}
-                      onChange={(e) => handleItemInputChange("name", e.target.value)}
-                      placeholder="e.g., Photography, Catering, Decoration"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="item-price">Price *</Label>
-                    <Input
-                      id="item-price"
-                      value={newItem.price}
-                      onChange={(e) => handleItemInputChange("price", e.target.value)}
-                      placeholder="e.g., ₹10,000 or ₹500 per person"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="item-description">Description</Label>
-                    <Input
-                      id="item-description"
-                      value={newItem.description}
-                      onChange={(e) => handleItemInputChange("description", e.target.value)}
-                      placeholder="Brief description of the item"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="item-image">Item Image *</Label>
-                    <Input
-                      id="item-image"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleItemImageSelect}
-                    />
-                    {newItem.imagePreview && (
-                      <div className="relative mt-2">
-                        <img
-                          src={newItem.imagePreview}
-                          alt="Item preview"
-                          className="w-full h-20 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleRemoveItemImage}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  onClick={handleAddItem}
-                  disabled={!newItem.name.trim() || !newItem.price.trim() || !newItem.image}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Item
-                </Button>
-              </div>
-
-              {/* Display Added Items */}
-              {formData.items.length > 0 && (
-                <div className="space-y-4">
-                  <h4 className="font-medium">Added Items</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {formData.items.map((item) => (
-                      <div key={item.id} className="border rounded-lg p-4 bg-white relative">
-                        <div className="flex justify-between items-start mb-2">
-                          <h5 className="font-medium text-gray-900">{item.name}</h5>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-
-                        {item.imagePreview && (
-                          <div className="mb-2">
-                            <img
-                              src={item.imagePreview}
-                              alt={item.name}
-                              className="w-full h-16 object-cover rounded-lg"
-                            />
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-2 mb-2">
-                          <IndianRupee className="h-4 w-4 text-green-600" />
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            {item.price}
-                          </Badge>
-                        </div>
-                        {item.description && (
-                          <p className="text-sm text-gray-600">{item.description}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {formData.items.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <IndianRupee className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No items added yet. Add your first item above.</p>
                 </div>
               )}
             </CardContent>

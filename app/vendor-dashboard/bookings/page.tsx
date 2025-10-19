@@ -36,64 +36,45 @@ export default function VendorBookingsPage() {
 
   // Mock bookings data - in a real app, you'd fetch this from your database
   const bookings = {
-    upcoming: [
-      {
-        id: "1",
-        clientName: "Priya Sharma",
-        clientEmail: "priya@example.com",
-        clientPhone: "+91 98765 43210",
-        service: "Wedding Photography",
-        date: "2024-02-15",
-        time: "10:00 AM",
-        location: "Taj Palace, Delhi",
-        amount: 25000,
-        status: "confirmed",
-        clientAvatar: "/placeholder-user.jpg"
-      },
-      {
-        id: "2",
-        clientName: "Rahul Verma",
-        clientEmail: "rahul@example.com",
-        clientPhone: "+91 98765 43211",
-        service: "Venue Booking",
-        date: "2024-02-20",
-        time: "2:00 PM",
-        location: "Leela Palace, Mumbai",
-        amount: 150000,
-        status: "pending",
-        clientAvatar: "/placeholder-user.jpg"
-      }
-    ],
-    completed: [
-      {
-        id: "3",
-        clientName: "Anjali Patel",
-        clientEmail: "anjali@example.com",
-        clientPhone: "+91 98765 43212",
-        service: "Catering Services",
-        date: "2024-01-30",
-        time: "6:00 PM",
-        location: "Hyatt Regency, Bangalore",
-        amount: 75000,
-        status: "completed",
-        clientAvatar: "/placeholder-user.jpg"
-      }
-    ],
-    cancelled: [
-      {
-        id: "4",
-        clientName: "Suresh Kumar",
-        clientEmail: "suresh@example.com",
-        clientPhone: "+91 98765 43213",
-        service: "Decoration Services",
-        date: "2024-01-25",
-        time: "4:00 PM",
-        location: "ITC Maurya, Delhi",
-        amount: 45000,
-        status: "cancelled",
-        clientAvatar: "/placeholder-user.jpg"
-      }
-    ]
+    upcoming: [] as Array<{
+      id: string;
+      clientName: string;
+      clientEmail: string;
+      clientPhone: string;
+      service: string;
+      date: string;
+      time: string;
+      location: string;
+      amount: number;
+      status: string;
+      clientAvatar: string;
+    }>,
+    completed: [] as Array<{
+      id: string;
+      clientName: string;
+      clientEmail: string;
+      clientPhone: string;
+      service: string;
+      date: string;
+      time: string;
+      location: string;
+      amount: number;
+      status: string;
+      clientAvatar: string;
+    }>,
+    cancelled: [] as Array<{
+      id: string;
+      clientName: string;
+      clientEmail: string;
+      clientPhone: string;
+      service: string;
+      date: string;
+      time: string;
+      location: string;
+      amount: number;
+      status: string;
+      clientAvatar: string;
+    }>
   }
 
   const getStatusBadge = (status: string) => {
@@ -206,7 +187,7 @@ export default function VendorBookingsPage() {
                     </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
