@@ -15,9 +15,6 @@ try {
 
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    appDir: true,
-  },
   rewrites: async () => [
     {
       source: "/sign-in",
@@ -28,8 +25,6 @@ const nextConfig = {
       destination: "/sign-up/[[...index]]",
     },
   ],
-
-
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -40,10 +35,13 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
+    appDir: true,
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  // Externalize packages for server components (helps with Clerk Edge compatibility)
+  serverComponentsExternalPackages: ['@clerk/nextjs'],
 }
 
 if (userConfig) {
