@@ -1,10 +1,20 @@
 import Razorpay from 'razorpay';
 
-// Initialize Razorpay instance
-export const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+// Lazy initialize Razorpay instance
+let razorpayInstance: Razorpay | null = null;
+
+const getRazorpayInstance = (): Razorpay => {
+  if (!razorpayInstance) {
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      throw new Error('Razorpay credentials are not configured');
+    }
+    razorpayInstance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+  return razorpayInstance;
+};
 
 // Types
 export interface RazorpayOrderParams {
@@ -43,13 +53,14 @@ export const createRazorpayOrder = async (params: RazorpayOrderParams): Promise<
       partial_payment: params.partial_payment || false,
     };
 
+    const razorpay = getRazorpayInstance();
     const order = await razorpay.orders.create(options);
     
     return {
       id: order.id,
-      amount: order.amount,
+      amount: Number(order.amount),
       currency: order.currency,
-      receipt: order.receipt,
+      receipt: order.receipt || '',
       status: order.status,
       created_at: order.created_at,
     };
@@ -88,6 +99,7 @@ export const verifyPaymentSignature = (
  */
 export const getPaymentDetails = async (paymentId: string) => {
   try {
+    const razorpay = getRazorpayInstance();
     const payment = await razorpay.payments.fetch(paymentId);
     return payment;
   } catch (error) {
@@ -101,6 +113,7 @@ export const getPaymentDetails = async (paymentId: string) => {
  */
 export const createRefund = async (paymentId: string, amount?: number) => {
   try {
+    const razorpay = getRazorpayInstance();
     const refundParams: any = {};
     if (amount) {
       refundParams.amount = amount; // Amount in paise
