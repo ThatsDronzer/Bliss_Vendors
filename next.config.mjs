@@ -40,13 +40,6 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals = config.externals || [];
-      config.externals.push('@clerk/backend');
-    }
-    return config;
-  },
 }
 
 if (userConfig) {
