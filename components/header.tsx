@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { LogOut, ShoppingCart, Search, User, Trash2, AlertTriangle } from "lucide-react"
 
@@ -142,9 +143,14 @@ export function Header() {
           {/* Left Side - Logo + Brand Name + Navigation Links */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-pink-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">B</span>
-              </div>
+              <Image
+                src="/images/logo.png"
+                alt="Blissmet Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10 object-contain"
+                priority
+              />
               <span className="font-bold text-2xl text-gray-900">Blissmet</span>
             </Link>
 

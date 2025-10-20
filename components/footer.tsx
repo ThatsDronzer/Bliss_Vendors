@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +17,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-pink-400">Blissmet</h3>
+            <Image
+              src="/images/logo.png"
+              alt="Blissmet Logo"
+              width={150}
+              height={40}
+              className="h-10 w-auto object-contain brightness-0 invert"
+            />
             <p className="text-gray-300 leading-relaxed">
               Your trusted partner for creating unforgettable events. Connect with top-rated vendors and make every
               moment special.
