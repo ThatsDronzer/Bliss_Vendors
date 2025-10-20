@@ -40,8 +40,6 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
-  // Externalize packages for server components (helps with Clerk Edge compatibility)
-  serverComponentsExternalPackages: ['@clerk/nextjs'],
 }
 
 if (userConfig) {
