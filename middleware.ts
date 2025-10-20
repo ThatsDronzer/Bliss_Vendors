@@ -1,8 +1,26 @@
 // middleware.ts
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+// Define public routes that don't require authentication
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/explore-services(.*)',
+  '/services(.*)',
+  '/vendors(.*)',
+  '/about(.*)',
+  '/contact(.*)',
+  '/api/webhooks(.*)',
+]);
+
 export default clerkMiddleware((auth, req) => {
+  // Protect all routes except public ones
+  if (!isPublicRoute(req)) {
+    auth().protect();
+  }
+
   // Check if user is accessing the homepage
   if (req.nextUrl.pathname === '/') {
     // Get user-agent from request headers
