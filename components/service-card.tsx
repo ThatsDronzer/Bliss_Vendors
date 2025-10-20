@@ -21,13 +21,18 @@ interface VendorInfo {
   reviewsCount?: number
 }
 
+interface ServiceImage {
+  url: string
+  public_id: string
+}
+
 interface Service {
   id: string
   name: string
   price: number
   category: string
   description: string
-  images: string[]
+  images: ServiceImage[]
   vendor: VendorInfo
   featured?: boolean
 }
@@ -80,19 +85,21 @@ export function ServiceCard({ service, searchQuery = "", onFavoriteToggle }: Ser
     router.push(`/vendors/${service.vendor.id}`)
   }
 
-  // Use vendor avatar image as the primary image for the service card
-  const primaryImage = service.vendor.image || "/placeholder.svg?height=200&width=300&text=Vendor"
+  // Use service's uploaded images first, then fallback to vendor profile image
+  const primaryImage = (service.images && service.images.length > 0) 
+    ? service.images[0].url  // Use first uploaded service image
+    : (service.vendor.image || "/placeholder.svg?height=200&width=300&text=Service")
 
   return (
     <Card
       className="overflow-hidden border shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group bg-white"
       onClick={handleServiceClick}
     >
-      {/* Service Image (Using Vendor Avatar) */}
+      {/* Service Image (Using Uploaded Service Image or Vendor Avatar as fallback) */}
       <div className="relative h-48 w-full overflow-hidden">
         <Image
           src={primaryImage}
-          alt={service.vendor.name}
+          alt={service.name}
           fill
           className="object-cover group-hover:scale-110 transition-transform duration-300"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

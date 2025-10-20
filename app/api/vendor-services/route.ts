@@ -3,6 +3,7 @@ import Listing from "@/model/listing";
 import Vendor from "@/model/vendor";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { clerkClient } from "@clerk/nextjs/server";
 
 // GET all services/listings for the explore services page (service-first approach)
 export async function GET(req: NextRequest) {
@@ -20,22 +21,46 @@ export async function GET(req: NextRequest) {
       }, { status: 200 });
     }
 
+    // Fetch Clerk user data for all vendors to get their profile images
+    const clerkUserPromises = vendors.map(async (vendor) => {
+      try {
+        const client = await clerkClient();
+        const clerkUser = await client.users.getUser(vendor.clerkId);
+        return {
+          clerkId: vendor.clerkId,
+          imageUrl: clerkUser.imageUrl
+        };
+      } catch (error) {
+        console.error(`Failed to fetch Clerk user for ${vendor.clerkId}:`, error);
+        return {
+          clerkId: vendor.clerkId,
+          imageUrl: null
+        };
+      }
+    });
+
+    const clerkUsers = await Promise.all(clerkUserPromises);
+    const clerkUserMap = new Map(clerkUsers.map(u => [u.clerkId, u.imageUrl]));
+
     // Create a map of vendors for quick lookup
     const vendorMap = new Map(
-      vendors.map(vendor => [
-        vendor._id.toString(),
-        {
-          id: vendor._id.toString(),
-          name: vendor.service_name || vendor.ownerName,
-          rating: 4.5, // Default rating
-          reviewsCount: 0, // Default count
-          image: vendor.ownerImage || "/placeholder.svg?height=200&width=300&text=Vendor",
-          location: vendor.service_address?.City || vendor.owner_address?.City || "Location not specified",
-          experience: "Established: " + (vendor.establishedYear || "N/A"),
-          description: vendor.service_description || "No description available",
-          verified: vendor.isVerified
-        }
-      ])
+      vendors.map(vendor => {
+        const clerkImageUrl = clerkUserMap.get(vendor.clerkId);
+        return [
+          vendor._id.toString(),
+          {
+            id: vendor._id.toString(),
+            name: vendor.service_name || vendor.ownerName,
+            rating: 4.5, // Default rating
+            reviewsCount: 0, // Default count
+            image: clerkImageUrl || vendor.ownerImage || "/placeholder.svg?height=200&width=300&text=Vendor",
+            location: vendor.service_address?.City || vendor.owner_address?.City || "Location not specified",
+            experience: "Established: " + (vendor.establishedYear || "N/A"),
+            description: vendor.service_description || "No description available",
+            verified: vendor.isVerified
+          }
+        ];
+      })
     );
 
     // Get all vendor IDs
@@ -86,12 +111,14 @@ export async function GET(req: NextRequest) {
         startingPrice: `₹${listing.price.toLocaleString('en-IN')}`
       }));
 
+      const clerkImageUrl = clerkUserMap.get(vendor.clerkId);
+
       return {
         id: vendor._id.toString(),
         name: vendor.service_name || vendor.ownerName,
         rating: 4.5,
         reviewsCount: 0,
-        image: vendor.ownerImage || "/placeholder.svg?height=200&width=300&text=Vendor",
+        image: clerkImageUrl || vendor.ownerImage || "/placeholder.svg?height=200&width=300&text=Vendor",
         location: vendor.service_address?.City || vendor.owner_address?.City || "Location not specified",
         experience: "Established: " + (vendor.establishedYear || "N/A"),
         description: vendor.service_description || "No description available",
