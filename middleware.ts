@@ -30,6 +30,3 @@ export const config = {
     '/(api|trpc)(.*)',
   ],
 };
-
-// Specify Edge Runtime explicitly
-export const runtime = 'edge';
