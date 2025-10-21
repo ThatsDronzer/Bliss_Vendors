@@ -1,699 +1,526 @@
-﻿"use client"
+"use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth, useUser } from "@clerk/nextjs"
+import { Upload, Camera, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Building, Mail, Phone, MapPin, Calendar, FileText, CreditCard, CheckCircle } from "lucide-react"
-
-// Common service categories
-const SERVICE_CATEGORIES = [
-  "Photography",
-  "Videography",
-  "Catering",
-  "Decoration",
-  "Music & DJ",
-  "Venue",
-  "Makeup & Hair",
-  "Wedding Planning",
-  "Transportation",
-  "Invitations",
-  "Entertainment",
-  "Other"
-]
-
-const INDIAN_STATES = [
-  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
-  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
-  "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
-  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-  "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
-  "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
-]
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { Footer } from "@/components/footer"
 
 export default function BecomeVendorPage() {
   const router = useRouter()
-  const { isSignedIn, isLoaded } = useAuth()
-  const { user } = useUser()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
-
   const [formData, setFormData] = useState({
-    // Owner Information
+    businessName: "",
     ownerName: "",
-    ownerEmail: "",
-    owner_contactNo: "",
-    ownerAadhar: "",
-    owner_address: {
-      State: "",
-      City: "",
-      location: "",
-      pinCode: ""
-    },
-    // Business Information
-    service_name: "",
-    service_email: "",
-    service_phone: "",
-    service_type: "",
-    service_description: "",
-    establishedYear: "",
-    service_address: {
-      State: "",
-      City: "",
-      location: "",
-      pinCode: ""
-    },
-    gstNumber: "",
-    panNumber: "",
-    // Bank Details
-    bankName: "",
-    accountNumber: "",
-    ifscCode: "",
-    accountHolderName: ""
+    email: "",
+    phone: "",
+    category: "",
+    subCategories: [] as string[],
+    description: "",
+    experience: "",
+    location: "",
+    address: "",
+    website: "",
+    instagram: "",
+    facebook: "",
+    services: [] as string[],
+    priceRange: "",
+    portfolio: [] as File[],
+    documents: [] as File[],
+    termsAccepted: false,
   })
 
-  // Check authentication before showing the page
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/sign-in?redirect=/become-vendor")
-    }
-  }, [isSignedIn, isLoaded, router])
+  const categories = [
+    "Venue",
+    "Photography",
+    "Catering",
+    "Decoration",
+    "DJ/Music",
+    "Makeup Artist",
+    "Mehndi Artist",
+    "Florist",
+    "Transportation",
+    "Entertainment",
+  ]
 
-  // Pre-fill owner information from Clerk
-  useEffect(() => {
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        ownerName: user.fullName || "",
-        ownerEmail: user.primaryEmailAddress?.emailAddress || ""
-      }))
-    }
-  }, [user])
-
-  // Show loading while checking authentication
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Checking authentication...</p>
-        </div>
-      </div>
-    )
+  const servicesByCategory = {
+    Photography: ["Wedding Photography", "Pre-wedding Shoot", "Event Photography", "Portrait Photography"],
+    Catering: ["North Indian", "South Indian", "Chinese", "Continental", "Desserts"],
+    Decoration: ["Floral Decoration", "Theme Decoration", "Lighting", "Stage Decoration"],
+    Venue: ["Banquet Hall", "Outdoor Venue", "Hotel", "Resort", "Farmhouse"],
+    "DJ/Music": ["DJ Services", "Live Band", "Sound System", "Lighting Equipment"],
   }
 
-  // Show nothing if not authenticated (will redirect)
-  if (!isSignedIn) {
-    return null
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.')
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...(prev[parent as keyof typeof prev] as any),
-          [child]: value
-        }
-      }))
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }))
-    }
-  }
-
-  const handleSelectChange = (name: string, value: string) => {
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.')
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...(prev[parent as keyof typeof prev] as any),
-          [child]: value
-        }
-      }))
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }))
-    }
-  }
-
-  const validateStep = (step: number) => {
-    switch (step) {
-      case 1:
-        if (!formData.ownerName || !formData.ownerEmail || !formData.owner_contactNo) {
-          toast.error("Please fill in all required owner information fields")
-          return false
-        }
-        if (!/^[6-9]\d{9}$/.test(formData.owner_contactNo)) {
-          toast.error("Please enter a valid 10-digit mobile number")
-          return false
-        }
-        if (!/^\S+@\S+\.\S+$/.test(formData.ownerEmail)) {
-          toast.error("Please enter a valid email address")
-          return false
-        }
-        return true
-      case 2:
-        if (!formData.service_name || !formData.service_type || !formData.service_phone || !formData.service_description) {
-          toast.error("Please fill in all required business information fields")
-          return false
-        }
-        if (!/^[6-9]\d{9}$/.test(formData.service_phone)) {
-          toast.error("Please enter a valid 10-digit business phone number")
-          return false
-        }
-        return true
-      case 3:
-        if (!formData.bankName || !formData.accountNumber || !formData.ifscCode || !formData.accountHolderName) {
-          toast.error("Please fill in all required bank details")
-          return false
-        }
-        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifscCode.toUpperCase())) {
-          toast.error("Please enter a valid IFSC code")
-          return false
-        }
-        return true
-      default:
-        return true
-    }
-  }
+  const locations = [
+    "Mumbai",
+    "Delhi",
+    "Bangalore",
+    "Chennai",
+    "Kolkata",
+    "Hyderabad",
+    "Pune",
+    "Ahmedabad",
+    "Jaipur",
+    "Lucknow",
+  ]
 
   const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(prev => prev + 1)
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1)
     }
   }
 
-  const handleBack = () => {
-    setCurrentStep(prev => prev - 1)
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validateStep(currentStep)) {
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      // Create vendor in database
-      const response = await fetch(`/api/vendor/${user?.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          clerkId: user?.id,
-          ownerName: formData.ownerName,
-          ownerEmail: formData.ownerEmail,
-          owner_contactNo: [formData.owner_contactNo],
-          ownerAadhar: formData.ownerAadhar,
-          owner_address: formData.owner_address,
-          service_name: formData.service_name,
-          service_email: formData.service_email || formData.ownerEmail,
-          service_phone: formData.service_phone,
-          service_type: formData.service_type,
-          service_description: formData.service_description,
-          establishedYear: formData.establishedYear,
-          service_address: formData.service_address,
-          gstNumber: formData.gstNumber,
-          panNumber: formData.panNumber,
-          bankName: formData.bankName,
-          accountNumber: formData.accountNumber,
-          ifscCode: formData.ifscCode.toUpperCase(),
-          accountHolderName: formData.accountHolderName,
-          isVerified: false,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to create vendor profile")
-      }
-
-      // Update user role in Clerk
-      await user?.update({
-        unsafeMetadata: {
-          role: "vendor"
-        }
-      })
-
-      toast.success("Vendor registration successful! Redirecting to your dashboard...")
-      
-      // Redirect to vendor dashboard after a brief delay
-      setTimeout(() => {
-        router.push("/vendor-dashboard")
-      }, 2000)
-
-    } catch (error) {
-      console.error("Error creating vendor profile:", error)
-      toast.error("Failed to create vendor profile. Please try again.")
-    } finally {
-      setIsSubmitting(false)
+  const handlePrevious = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Become a Vendor
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Join our platform and grow your business with Bliss Vendors
-          </p>
+  const handleSubmit = () => {
+    // Simulate form submission
+    console.log("Form submitted:", formData)
+    router.push("/vendor-dashboard")
+  }
+
+  const handleServiceToggle = (service: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      services: prev.services.includes(service)
+        ? prev.services.filter((s) => s !== service)
+        : [...prev.services, service],
+    }))
+  }
+
+  const renderStep1 = () => (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-2">Business Information</h2>
+        <p className="text-gray-600">Tell us about your business</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <Label htmlFor="businessName">Business Name *</Label>
+          <Input
+            id="businessName"
+            value={formData.businessName}
+            onChange={(e) => setFormData((prev) => ({ ...prev, businessName: e.target.value }))}
+            placeholder="Enter your business name"
+          />
         </div>
 
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            {[1, 2, 3].map((step) => (
-              <div key={step} className="flex items-center flex-1">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                  currentStep >= step
-                    ? "bg-pink-600 border-pink-600 text-white"
-                    : "border-gray-300 text-gray-300"
-                }`}>
-                  {currentStep > step ? <CheckCircle className="w-6 h-6" /> : step}
-                </div>
-                {step < 3 && (
-                  <div className={`flex-1 h-1 mx-2 ${
-                    currentStep > step ? "bg-pink-600" : "bg-gray-300"
-                  }`} />
-                )}
+        <div>
+          <Label htmlFor="ownerName">Owner Name *</Label>
+          <Input
+            id="ownerName"
+            value={formData.ownerName}
+            onChange={(e) => setFormData((prev) => ({ ...prev, ownerName: e.target.value }))}
+            placeholder="Enter owner's full name"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="email">Email Address *</Label>
+          <Input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+            placeholder="business@example.com"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="phone">Phone Number *</Label>
+          <Input
+            id="phone"
+            value={formData.phone}
+            onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
+            placeholder="+91 98765 43210"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="category">Primary Category *</Label>
+          <Select
+            value={formData.category}
+            onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select your primary service" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="experience">Years of Experience</Label>
+          <Input
+            id="experience"
+            type="number"
+            placeholder="Enter years of experience"
+            className="col-span-3"
+            required
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="itemsServed">Items/Services Served</Label>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Input
+                id="totalItems"
+                type="number"
+                placeholder="Total items/services offered"
+                className="flex-1"
+                required
+              />
+              <Input
+                id="monthlyCapacity"
+                type="number"
+                placeholder="Monthly service capacity"
+                className="flex-1"
+                required
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <Input
+                id="minPrice"
+                type="number"
+                placeholder="Minimum price per item"
+                className="flex-1"
+                required
+              />
+              <Input
+                id="maxPrice"
+                type="number"
+                placeholder="Maximum price per item"
+                className="flex-1"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="serviceArea">Service Area Coverage</Label>
+          <Input
+            id="serviceArea"
+            placeholder="Enter cities/regions you serve"
+            className="col-span-3"
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="description">Business Description *</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+          placeholder="Describe your business, services, and what makes you unique..."
+          rows={4}
+        />
+      </div>
+    </div>
+  )
+
+  const renderStep2 = () => (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-2">Location & Contact</h2>
+        <p className="text-gray-600">Where are you located and how can clients reach you?</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <Label htmlFor="location">Primary City *</Label>
+          <Select
+            value={formData.location}
+            onValueChange={(value) => setFormData((prev) => ({ ...prev, location: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select your city" />
+            </SelectTrigger>
+            <SelectContent>
+              {locations.map((location) => (
+                <SelectItem key={location} value={location}>
+                  {location}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="priceRange">Price Range *</Label>
+          <Select
+            value={formData.priceRange}
+            onValueChange={(value) => setFormData((prev) => ({ ...prev, priceRange: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select price range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="budget">Budget (₹10k - ₹50k)</SelectItem>
+              <SelectItem value="mid-range">Mid-range (₹50k - ₹2L)</SelectItem>
+              <SelectItem value="premium">Premium (₹2L - ₹5L)</SelectItem>
+              <SelectItem value="luxury">Luxury (₹5L+)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="address">Complete Address *</Label>
+        <Textarea
+          id="address"
+          value={formData.address}
+          onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+          placeholder="Enter your complete business address..."
+          rows={3}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <Label htmlFor="website">Website (Optional)</Label>
+          <Input
+            id="website"
+            value={formData.website}
+            onChange={(e) => setFormData((prev) => ({ ...prev, website: e.target.value }))}
+            placeholder="https://yourwebsite.com"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="instagram">Instagram (Optional)</Label>
+          <Input
+            id="instagram"
+            value={formData.instagram}
+            onChange={(e) => setFormData((prev) => ({ ...prev, instagram: e.target.value }))}
+            placeholder="@yourbusiness"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="facebook">Facebook (Optional)</Label>
+          <Input
+            id="facebook"
+            value={formData.facebook}
+            onChange={(e) => setFormData((prev) => ({ ...prev, facebook: e.target.value }))}
+            placeholder="facebook.com/yourbusiness"
+          />
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderStep3 = () => (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-2">Services & Portfolio</h2>
+        <p className="text-gray-600">What services do you offer?</p>
+      </div>
+
+      {formData.category && servicesByCategory[formData.category as keyof typeof servicesByCategory] && (
+        <div>
+          <Label>Services Offered *</Label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+            {servicesByCategory[formData.category as keyof typeof servicesByCategory].map((service) => (
+              <div key={service} className="flex items-center space-x-2">
+                <Checkbox
+                  id={service}
+                  checked={formData.services.includes(service)}
+                  onCheckedChange={() => handleServiceToggle(service)}
+                />
+                <Label htmlFor={service} className="text-sm">
+                  {service}
+                </Label>
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Owner Info</span>
-            <span className="text-xs text-gray-600 dark:text-gray-400">Business Info</span>
-            <span className="text-xs text-gray-600 dark:text-gray-400">Bank Details</span>
+        </div>
+      )}
+
+      <div>
+        <Label>Portfolio Images *</Label>
+        <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+          <Camera className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-600 mb-2">Upload your best work</p>
+          <p className="text-sm text-gray-500 mb-4">PNG, JPG up to 10MB each (Max 10 images)</p>
+          <Button variant="outline">
+            <Upload className="w-4 h-4 mr-2" />
+            Choose Images
+          </Button>
+        </div>
+      </div>
+
+      <div>
+        <Label>Business Documents</Label>
+        <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+          <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+          <p className="text-sm text-gray-600 mb-2">Upload business registration, GST certificate, etc.</p>
+          <Button variant="outline" size="sm">
+            Choose Files
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderStep4 = () => (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-2">Review & Submit</h2>
+        <p className="text-gray-600">Please review your information before submitting</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-500" />
+            Application Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium text-gray-700">Business Name</h4>
+              <p>{formData.businessName || "Not provided"}</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-700">Category</h4>
+              <p>{formData.category || "Not selected"}</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-700">Location</h4>
+              <p>{formData.location || "Not selected"}</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-700">Experience</h4>
+              <p>{formData.experience || "Not specified"}</p>
+            </div>
+          </div>
+
+          {formData.services.length > 0 && (
+            <div>
+              <h4 className="font-medium text-gray-700 mb-2">Services</h4>
+              <div className="flex flex-wrap gap-2">
+                {formData.services.map((service) => (
+                  <Badge key={service} variant="secondary">
+                    {service}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <Separator />
+
+          <div className="flex items-start space-x-2">
+            <Checkbox
+              id="terms"
+              checked={formData.termsAccepted}
+              onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, termsAccepted: checked as boolean }))}
+            />
+            <Label htmlFor="terms" className="text-sm">
+              I agree to the{" "}
+              <a href="#" className="text-blue-600 hover:underline">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="#" className="text-blue-600 hover:underline">
+                Privacy Policy
+              </a>
+              . I understand that my application will be reviewed and I will be notified of the status within 2-3
+              business days.
+            </Label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 className="font-medium text-blue-800 mb-2">What happens next?</h4>
+        <ul className="text-sm text-blue-700 space-y-1">
+          <li>• Your application will be reviewed by our team</li>
+          <li>• We'll verify your documents and portfolio</li>
+          <li>• You'll receive an email notification within 2-3 business days</li>
+          <li>• Once approved, you can start receiving bookings!</li>
+        </ul>
+      </div>
+    </div>
+  )
+
+  return (
+    <main className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              Become a Vendor
+            </h1>
+            <div className="text-sm text-gray-600">Step {currentStep} of 4</div>
+          </div>
+
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-gradient-to-r from-purple-600 to-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / 4) * 100}%` }}
+            ></div>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {currentStep === 1 && "Owner Information"}
-                {currentStep === 2 && "Business Information"}
-                {currentStep === 3 && "Bank Details"}
-              </CardTitle>
-              <CardDescription>
-                {currentStep === 1 && "Provide your personal information"}
-                {currentStep === 2 && "Tell us about your business"}
-                {currentStep === 3 && "Add your bank account details for payments"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Step 1: Owner Information */}
-              {currentStep === 1 && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="ownerName">Owner Name *</Label>
-                      <Input
-                        id="ownerName"
-                        name="ownerName"
-                        value={formData.ownerName}
-                        onChange={handleInputChange}
-                        placeholder="Full Name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="ownerEmail">Email *</Label>
-                      <Input
-                        id="ownerEmail"
-                        name="ownerEmail"
-                        type="email"
-                        value={formData.ownerEmail}
-                        onChange={handleInputChange}
-                        placeholder="email@example.com"
-                        required
-                      />
-                    </div>
-                  </div>
+        <Card className="max-w-4xl mx-auto">
+          <CardContent className="p-8">
+            {currentStep === 1 && renderStep1()}
+            {currentStep === 2 && renderStep2()}
+            {currentStep === 3 && renderStep3()}
+            {currentStep === 4 && renderStep4()}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="owner_contactNo">Contact Number *</Label>
-                      <Input
-                        id="owner_contactNo"
-                        name="owner_contactNo"
-                        value={formData.owner_contactNo}
-                        onChange={handleInputChange}
-                        placeholder="10-digit mobile number"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="ownerAadhar">Aadhar Number (Optional)</Label>
-                      <Input
-                        id="ownerAadhar"
-                        name="ownerAadhar"
-                        value={formData.ownerAadhar}
-                        onChange={handleInputChange}
-                        placeholder="12-digit Aadhar number"
-                      />
-                    </div>
-                  </div>
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8 pt-6 border-t">
+              <Button variant="outline" onClick={handlePrevious} disabled={currentStep === 1}>
+                Previous
+              </Button>
 
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Owner Address</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="owner_address.State">State</Label>
-                        <Select
-                          value={formData.owner_address.State}
-                          onValueChange={(value) => handleSelectChange("owner_address.State", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select State" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {INDIAN_STATES.map(state => (
-                              <SelectItem key={state} value={state}>{state}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="owner_address.City">City</Label>
-                        <Input
-                          id="owner_address.City"
-                          name="owner_address.City"
-                          value={formData.owner_address.City}
-                          onChange={handleInputChange}
-                          placeholder="City"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="owner_address.location">Location/Area</Label>
-                        <Input
-                          id="owner_address.location"
-                          name="owner_address.location"
-                          value={formData.owner_address.location}
-                          onChange={handleInputChange}
-                          placeholder="Street address"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="owner_address.pinCode">PIN Code</Label>
-                        <Input
-                          id="owner_address.pinCode"
-                          name="owner_address.pinCode"
-                          value={formData.owner_address.pinCode}
-                          onChange={handleInputChange}
-                          placeholder="6-digit PIN"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {currentStep < 4 ? (
+                <Button
+                  onClick={handleNext}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  Next Step
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!formData.termsAccepted}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  Submit Application
+                </Button>
               )}
-
-              {/* Step 2: Business Information */}
-              {currentStep === 2 && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="service_name">Business Name *</Label>
-                      <Input
-                        id="service_name"
-                        name="service_name"
-                        value={formData.service_name}
-                        onChange={handleInputChange}
-                        placeholder="Your business name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="service_type">Service Category *</Label>
-                      <Select
-                        value={formData.service_type}
-                        onValueChange={(value) => handleSelectChange("service_type", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SERVICE_CATEGORIES.map(category => (
-                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="service_phone">Business Phone *</Label>
-                      <Input
-                        id="service_phone"
-                        name="service_phone"
-                        value={formData.service_phone}
-                        onChange={handleInputChange}
-                        placeholder="10-digit phone number"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="service_email">Business Email</Label>
-                      <Input
-                        id="service_email"
-                        name="service_email"
-                        type="email"
-                        value={formData.service_email}
-                        onChange={handleInputChange}
-                        placeholder="business@example.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="establishedYear">Established Year</Label>
-                      <Input
-                        id="establishedYear"
-                        name="establishedYear"
-                        value={formData.establishedYear}
-                        onChange={handleInputChange}
-                        placeholder="YYYY"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="gstNumber">GST Number (Optional)</Label>
-                      <Input
-                        id="gstNumber"
-                        name="gstNumber"
-                        value={formData.gstNumber}
-                        onChange={handleInputChange}
-                        placeholder="GST Number"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="panNumber">PAN Number (Optional)</Label>
-                    <Input
-                      id="panNumber"
-                      name="panNumber"
-                      value={formData.panNumber}
-                      onChange={handleInputChange}
-                      placeholder="PAN Number"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="service_description">Business Description *</Label>
-                    <Textarea
-                      id="service_description"
-                      name="service_description"
-                      value={formData.service_description}
-                      onChange={handleInputChange}
-                      placeholder="Describe your services..."
-                      rows={4}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Business Address</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="service_address.State">State</Label>
-                        <Select
-                          value={formData.service_address.State}
-                          onValueChange={(value) => handleSelectChange("service_address.State", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select State" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {INDIAN_STATES.map(state => (
-                              <SelectItem key={state} value={state}>{state}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="service_address.City">City</Label>
-                        <Input
-                          id="service_address.City"
-                          name="service_address.City"
-                          value={formData.service_address.City}
-                          onChange={handleInputChange}
-                          placeholder="City"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="service_address.location">Location/Area</Label>
-                        <Input
-                          id="service_address.location"
-                          name="service_address.location"
-                          value={formData.service_address.location}
-                          onChange={handleInputChange}
-                          placeholder="Street address"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="service_address.pinCode">PIN Code</Label>
-                        <Input
-                          id="service_address.pinCode"
-                          name="service_address.pinCode"
-                          value={formData.service_address.pinCode}
-                          onChange={handleInputChange}
-                          placeholder="6-digit PIN"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Bank Details */}
-              {currentStep === 3 && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="bankName">Bank Name *</Label>
-                      <Input
-                        id="bankName"
-                        name="bankName"
-                        value={formData.bankName}
-                        onChange={handleInputChange}
-                        placeholder="Bank name"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="accountHolderName">Account Holder Name *</Label>
-                      <Input
-                        id="accountHolderName"
-                        name="accountHolderName"
-                        value={formData.accountHolderName}
-                        onChange={handleInputChange}
-                        placeholder="Account holder name"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="accountNumber">Account Number *</Label>
-                      <Input
-                        id="accountNumber"
-                        name="accountNumber"
-                        value={formData.accountNumber}
-                        onChange={handleInputChange}
-                        placeholder="Account number"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="ifscCode">IFSC Code *</Label>
-                      <Input
-                        id="ifscCode"
-                        name="ifscCode"
-                        value={formData.ifscCode}
-                        onChange={handleInputChange}
-                        placeholder="IFSC code"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-4">
-                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Important Information</h4>
-                    <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                      <li>• Your bank details will be used for receiving payments</li>
-                      <li>• Please ensure all information is accurate</li>
-                      <li>• Your account will be verified by our team</li>
-                      <li>• You can update these details later from your dashboard</li>
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation Buttons */}
-              <div className="flex justify-between pt-6 border-t">
-                {currentStep > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleBack}
-                    disabled={isSubmitting}
-                  >
-                    Back
-                  </Button>
-                )}
-                {currentStep < 3 ? (
-                  <Button
-                    type="button"
-                    onClick={handleNext}
-                    className="ml-auto"
-                  >
-                    Next
-                  </Button>
-                ) : (
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="ml-auto"
-                  >
-                    {isSubmitting ? "Submitting..." : "Submit Application"}
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </form>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+      <Footer />
+    </main>
   )
 }
