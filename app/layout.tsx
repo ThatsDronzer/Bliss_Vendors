@@ -4,7 +4,8 @@ import { Inter } from "next/font/google"
 import { ChatLayout } from "@/components/layouts/chat-layout"
 import { Header } from "@/components/header"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster as SonnerToaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/toaster"
 import { ClerkProvider, SignedIn } from '@clerk/nextjs'
 
 const inter = Inter({ subsets: ["latin"] })
@@ -30,7 +31,8 @@ export default function RootLayout({
             </div>
             <MobileBottomNav />
           </ChatLayout>
-          <Toaster/>
+          <SonnerToaster />
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>
