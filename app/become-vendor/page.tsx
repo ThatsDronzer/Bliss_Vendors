@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@clerk/nextjs"
+import { useAuth, useUser } from "@clerk/nextjs"
 import { Upload, Camera, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,7 @@ import { useToast } from "@/components/ui/use-toast"
 export default function BecomeVendorPage() {
   const router = useRouter()
   const { isSignedIn, isLoaded } = useAuth()
+  const { user } = useUser()
   const { toast } = useToast()
   const [currentStep, setCurrentStep] = useState(1)
   const [showTermsDialog, setShowTermsDialog] = useState(false)
@@ -94,6 +95,11 @@ export default function BecomeVendorPage() {
     Decoration: ["Floral Decoration", "Theme Decoration", "Lighting", "Stage Decoration"],
     Venue: ["Banquet Hall", "Outdoor Venue", "Hotel", "Resort", "Farmhouse"],
     "DJ/Music": ["DJ Services", "Live Band", "Sound System", "Lighting Equipment"],
+    "Makeup Artist": ["Bridal Makeup", "Party Makeup", "HD Makeup", "Airbrush Makeup", "Hair Styling"],
+    "Mehndi Artist": ["Bridal Mehndi", "Arabic Mehndi", "Traditional Mehndi", "Contemporary Mehndi"],
+    Florist: ["Wedding Flowers", "Bouquets", "Garlands", "Floral Arrangements", "Venue Decoration"],
+    Transportation: ["Luxury Cars", "Vintage Cars", "Buses", "Guest Transportation", "Valet Service"],
+    Entertainment: ["Live Band", "DJ", "Dance Performance", "Stand-up Comedy", "Anchoring"],
   }
 
   const locations = [
@@ -327,9 +333,20 @@ export default function BecomeVendorPage() {
         variant: "default"
       })
       
+      // Reload user data to fetch updated role from Clerk
+      try {
+        if (user) {
+          await user.reload();
+          console.log("User data reloaded successfully. New role:", user.unsafeMetadata?.role);
+        }
+      } catch (reloadError) {
+        console.error("Error reloading user data:", reloadError);
+      }
+      
       // Small delay to show the success message before redirecting
       setTimeout(() => {
         router.push("/vendor-dashboard");
+        router.refresh(); // Also refresh Next.js router cache
       }, 1500);
     } catch (error: any) {
       console.error("Error submitting application:", error);

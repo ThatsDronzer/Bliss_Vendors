@@ -22,14 +22,35 @@ export default function VendorDashboardPage() {
 
   // Redirect if not authenticated or not a vendor
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push("/sign-in?role=vendor")
-    } else if (isLoaded && isSignedIn && userRole !== "vendor") {
-      router.push("/")
-    } else if (isLoaded && isSignedIn && userRole === "vendor") {
-      setIsLoading(false)
+    const checkAndRedirect = async () => {
+      if (isLoaded && !isSignedIn) {
+        router.push("/sign-in?role=vendor")
+      } else if (isLoaded && isSignedIn && userRole !== "vendor") {
+        // Try reloading user data once before redirecting
+        console.log("Current role detected:", userRole, "- Attempting to reload user data...");
+        try {
+          if (user) {
+            await user.reload();
+            const updatedRole = user.unsafeMetadata?.role as string;
+            console.log("After reload, role is:", updatedRole);
+            if (updatedRole === "vendor") {
+              setIsLoading(false);
+              return; // Stay on page
+            }
+          }
+        } catch (error) {
+          console.error("Error reloading user:", error);
+        }
+        // Still not a vendor after reload, redirect
+        console.log("User is not a vendor after reload, redirecting to home");
+        router.push("/")
+      } else if (isLoaded && isSignedIn && userRole === "vendor") {
+        setIsLoading(false)
+      }
     }
-  }, [isSignedIn, isLoaded, userRole, router])
+    
+    checkAndRedirect();
+  }, [isSignedIn, isLoaded, userRole, router, user])
 
   // Show loading while checking authentication
   if (!isLoaded || isLoading) {
